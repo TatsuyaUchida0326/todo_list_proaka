@@ -1,67 +1,85 @@
 import React, { useState } from 'react';
 
-
-// "Todo" 型の定義をコンポーネント外で行います
+// "Todo" 型の定義
 type Todo = {
-  content: string; // プロパティ content は文字列型
-  
+  content: string;
+  readonly id: number;
 };
-
 
 // Todo コンポーネントの定義
 const Todo: React.FC = () => {
-  const [todos, setTodos] = useState<Todo[]>([]); // Todoの配列を保持するステート
+  const [todos, setTodos] = useState<Todo[]>([]); // Todo の配列を保持するステート
   const [text, setText] = useState(''); // フォーム入力のためのステート
+  const [nextId, setNextId] = useState(1); // 次の Todo の ID を保持するステート
 
-
-  // todos ステートを更新する関数
+  // 新しい Todo を追加する関数
   const handleSubmit = () => {
-    // 何も入力されていなかったらリターン
     if (!text) return;
-
 
     // 新しい Todo を作成
     const newTodo: Todo = {
-      content: text, // text ステートの値を content プロパティへ
+      content: text,
+      id: nextId,
     };
 
-
-    /**
-     * 更新前の todos ステートを元に
-     * スプレッド構文で展開した要素へ
-     * newTodo を加えた新しい配列でステートを更新
-     **/
-    setTodos((prevTodos) => [newTodo, ...prevTodos]);
-
-
-    // フォームへの入力をクリアする
-    setText('');
+    setTodos((prevTodos) => [newTodo, ...prevTodos]); // todos ステートを更新
+    setNextId(nextId + 1); // 次の ID を更新
+    setText(''); // フォーム入力をクリア
   };
 
+  // Todo の内容を編集する関数
+  const handleEdit = (id: number, value: string) => {
+    setTodos((todos) => {
+      const newTodos = todos.map((todo) => {
+        if (todo.id === id) {
+          // 新しいオブジェクトを作成して返す
+          return { ...todo, content: value };
+        }
+        return todo;
+      });
+  
+  
+      // todos ステートが書き換えられていないかチェック
+      console.log('=== Original todos ===');
+      todos.map((todo) => {
+        console.log(`id: ${todo.id}, content: ${todo.content}`);
+      });
+  
+  
+      return newTodos;
+    });
+  };
 
   return (
     <div>
       <form
         onSubmit={(e) => {
-          e.preventDefault(); // フォームのデフォルト動作を防ぐ
-          handleSubmit(); // handleSubmit 関数を呼び出す
+          e.preventDefault();
+          handleSubmit();
         }}
       >
         <input
           type="text"
-          value={text} // フォームの入力値をステートにバインド
-          onChange={(e) => setText(e.target.value)} // 入力値が変わった時にステートを更新
+          value={text}
+          onChange={(e) => setText(e.target.value)}
         />
-        <input type="submit" content="追加" /> {/* ボタンをクリックしてもonSubmitをトリガーしない */}
+        <input type="submit" value="追加" />
       </form>
       <ul>
-        {todos.map((todo, index) => (
-          <li key={index}>{todo.content}</li> // todoのリストを表示
-        ))}
+        {todos.map((todo) => {
+          return (
+            <li key={todo.id}>
+              <input
+                type="text"
+                value={todo.content}
+                onChange={(e) => handleEdit(todo.id, e.target.value)}
+              />
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
 };
-
 
 export default Todo;
