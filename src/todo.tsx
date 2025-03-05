@@ -6,7 +6,7 @@ type Todo = {
   content: string;
   readonly id: number;
   completed_flg: boolean;
-  delete_flg: boolean; // <-- 追加
+  delete_flg: boolean;
 };
 
 
@@ -30,7 +30,7 @@ const Todo: React.FC = () => {
       content: text,
       id: nextId,
       completed_flg: false,
-      delete_flg: false, // <-- 追加
+      delete_flg: false,
     };
 
 
@@ -57,7 +57,6 @@ const Todo: React.FC = () => {
         return todos.filter((todo) => !todo.delete_flg);
     }
   };
-  
 
 
   const handleEdit = (id: number, value: string) => {
@@ -103,7 +102,12 @@ const Todo: React.FC = () => {
     setFilter(filter);
   };
 
-const isFormDisabled = filter === 'completed' || filter === 'delete';
+
+   // 物理的に削除する関数
+   const handleEmpty = () => {
+    setTodos((todos) => todos.filter((todo) => !todo.delete_flg));
+  };
+
 
   return (
     <div className="todo-container">
@@ -116,33 +120,40 @@ const isFormDisabled = filter === 'completed' || filter === 'delete';
         <option value="unchecked">現在のタスク</option>
         <option value="delete">ごみ箱</option>
       </select>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault(); // フォームのデフォルト動作を防ぐ
-          handleSubmit(); // handleSubmit 関数を呼び出す
-        }}
-      >
-        <input
-          type="text"
-          value={text} // フォームの入力値をステートにバインド
-          disabled={isFormDisabled}
-          onChange={(e) => setText(e.target.value)} // 入力値が変わった時にステートを更新
-        />
-        <button type="submit" disabled={filter === 'completed' || filter === 'delete'}>追加</button>
-      </form>
+      {/* フィルターが `delete` のときは「ごみ箱を空にする」ボタンを表示 */}
+      {filter === 'delete' ? (
+        <button onClick={handleEmpty}>
+          ごみ箱を空にする
+        </button>
+      ) : (
+        // フィルターが `completed` でなければ Todo 入力フォームを表示
+        filter !== 'completed' && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
+            <input
+              type="text"
+              value={text} // フォームの入力値をステートにバインド
+              onChange={(e) => setText(e.target.value)} // 入力値が変わった時にステートを更新
+            />
+            <button type="submit">追加</button>
+          </form>
+        )
+      )}
       <ul>
         {getFilteredTodos().map((todo) => (
           <li key={todo.id}>
             <input
               type="checkbox"
-              checked={todo.completed_flg} // ← 修正
-              disabled={isFormDisabled} // ← 無効化は `disabled` で適用
+              checked={todo.completed_flg}
               onChange={() => handleCheck(todo.id, !todo.completed_flg)}
             />
             <input
               type="text"
               value={todo.content}
-              disabled={todo.completed_flg}
               onChange={(e) => handleEdit(todo.id, e.target.value)}
             />
             <button onClick={() => handleRemove(todo.id, !todo.delete_flg)}>
